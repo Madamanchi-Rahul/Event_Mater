@@ -288,3 +288,27 @@ enum session_type {
   Organiser
   Speaker
 }
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function createTrigger() {
+    try {
+        await prisma.$executeRaw(`
+            CREATE TRIGGER update_registration_status
+            AFTER INSERT ON registration
+            FOR EACH ROW
+            BEGIN
+                INSERT INTO logs (action, timestamp) 
+                VALUES ('New registration added', NOW());
+            END;
+        `);
+        console.log("Trigger created successfully!");
+    } catch (error) {
+        console.error("Error creating trigger:", error);
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+createTrigger();
